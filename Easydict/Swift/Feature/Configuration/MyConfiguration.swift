@@ -80,8 +80,6 @@ class MyConfiguration: NSObject {
     @DefaultsWrapper(.autoCopyOCRText) var autoCopyOCRText: Bool
     @DefaultsWrapper(.autoCopyFirstTranslatedText) var autoCopyFirstTranslatedText: Bool
 
-    @DefaultsWrapper(.showGoogleQuickLink) var showGoogleQuickLink: Bool
-    @DefaultsWrapper(.showEudicQuickLink) var showEudicQuickLink: Bool
     @DefaultsWrapper(.showAppleDictionaryQuickLink) var showAppleDictionaryQuickLink: Bool
     @DefaultsWrapper(.showQuickActionButton) var showQuickActionButton: Bool
 
@@ -111,9 +109,7 @@ class MyConfiguration: NSObject {
     @DefaultsWrapper(.allowAnalytics) var allowAnalytics: Bool
 
     @ShortcutWrapper(.pinShortcut) var pinShortcutString: String
-    @ShortcutWrapper(.googleShortcut) var googleShortcutString: String
     @ShortcutWrapper(.appleDictionaryShortcut) var appleDictShortcutString: String
-    @ShortcutWrapper(.eudicShortcut) var eudicDictShortcutString: String
 
     let fontSizes: [CGFloat] = [1, 1.1, 1.2, 1.3, 1.4]
     var disabledAutoSelect: Bool = false
@@ -279,22 +275,6 @@ class MyConfiguration: NSObject {
             }
             .store(in: &cancellables)
 
-        Defaults.publisher(.showGoogleQuickLink, options: [])
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.didSetShowGoogleQuickLink()
-            }
-            .store(in: &cancellables)
-
-        Defaults.publisher(.showEudicQuickLink, options: [])
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.didSetShowEudicQuickLink()
-            }
-            .store(in: &cancellables)
-
         Defaults.publisher(.showAppleDictionaryQuickLink, options: [])
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
@@ -388,8 +368,6 @@ class MyConfiguration: NSObject {
             keys: [
                 .pinShortcut,
                 .appleDictionaryShortcut,
-                .googleShortcut,
-                .eudicShortcut,
             ],
             options: []
         )
@@ -492,16 +470,6 @@ extension MyConfiguration {
     fileprivate func didSetDefaultTTSServiceType() {
         let value = defaultTTSServiceType
         logSettings(["tts": value])
-    }
-
-    fileprivate func didSetShowGoogleQuickLink() {
-        postUpdateQuickLinkButtonNotification()
-        logSettings(["show_google_link": showGoogleQuickLink])
-    }
-
-    fileprivate func didSetShowEudicQuickLink() {
-        postUpdateQuickLinkButtonNotification()
-        logSettings(["show_eudic_link": showEudicQuickLink])
     }
 
     fileprivate func didSetShowAppleDictionaryQuickLink() {

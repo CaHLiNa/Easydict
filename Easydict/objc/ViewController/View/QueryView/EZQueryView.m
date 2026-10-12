@@ -436,26 +436,7 @@ static const NSTimeInterval EZAutoQueryWhenTextChangedDelay = 0.8;
     }
     
     // No operation
-    
-    // Moved to EZStatusItem: googleItem, eudicItem
-//    if (commandSelector == NSSelectorFromString(@"noop:")) {
-//        // Cmd
-//        if (flags & NSEventModifierFlagCommand) {
-//            // Enter
-//            if (keyCode == kVK_Return) {
-//                // Cmd + Shift + Enter
-//                if (flags & NSEventModifierFlagShift) {
-//                    [window.titleBar.eudicButton openLink];
-//                    return YES;
-//                } else {
-//                    // Cmd + Enter
-//                    [window.titleBar.googleButton openLink];
-//                    return YES;
-//                }
-//            }
-//        }
-//    }
-    
+
     return NO;
 }
 

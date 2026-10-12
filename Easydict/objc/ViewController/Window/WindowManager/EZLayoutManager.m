@@ -122,13 +122,13 @@ static EZLayoutManager *_instance;
 
     switch (type) {
         case EZWindowTypeMain:
-            return 75; // three line
+            return 58; // about three lines at the default 14pt font
         case EZWindowTypeFixed:
-            return 65; // > two line
+            return 50; // about two lines
         case EZWindowTypeMini:
-            return 54; // two line.
+            return 42; // two lines
         default:
-            return 54; // two line
+            return 42;
     }
 }
 

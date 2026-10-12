@@ -36,8 +36,6 @@ extension EasydictMainMenu {
             MainMenuShortcutCommandDataItem(action: .hide),
             MainMenuShortcutCommandDataItem(action: .increaseFontSize),
             MainMenuShortcutCommandDataItem(action: .decreaseFontSize),
-            MainMenuShortcutCommandDataItem(action: .google),
-            MainMenuShortcutCommandDataItem(action: .eudic),
             MainMenuShortcutCommandDataItem(action: .appleDic),
         ]
     }

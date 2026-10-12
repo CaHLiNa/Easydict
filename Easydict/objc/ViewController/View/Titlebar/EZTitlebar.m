@@ -17,9 +17,7 @@
 
 typedef NS_ENUM(NSInteger, EZTitlebarButtonType) {
     EZTitlebarButtonTypePin = 0,
-    EZTitlebarButtonTypeGoogle,
     EZTitlebarButtonTypeAppleDic,
-    EZTitlebarButtonTypeEudicDic,
 };
 
 @interface EZTitlebar ()
@@ -276,15 +274,6 @@ typedef NS_ENUM(NSInteger, EZTitlebarButtonType) {
     return _quickActionButton;
 }
 
-- (EZOpenLinkButton *)googleButton {
-    if (!_googleButton) {
-        _googleButton = [self createButtonWithLink:EZGoogleWebSearchURL 
-                                         imageName:@"google_icon"
-                                        buttonType:EZTitlebarButtonTypeGoogle];
-    }
-    return _googleButton;
-}
-
 - (EZOpenLinkButton *)appleDictionaryButton {
     if (!_appleDictionaryButton) {
         _appleDictionaryButton = [self createButtonWithLink:EZAppleDictionaryAppURLScheme 
@@ -292,15 +281,6 @@ typedef NS_ENUM(NSInteger, EZTitlebarButtonType) {
                                                  buttonType:EZTitlebarButtonTypeAppleDic];
     }
     return _appleDictionaryButton;
-}
-
-- (EZOpenLinkButton *)eudicButton {
-    if (!_eudicButton) {
-        _eudicButton = [self createButtonWithLink:EZEudicAppURLScheme 
-                                        imageName:@"Eudic"
-                                       buttonType:EZTitlebarButtonTypeEudicDic];
-    }
-    return _eudicButton;
 }
 
 
@@ -318,21 +298,9 @@ typedef NS_ENUM(NSInteger, EZTitlebarButtonType) {
 - (NSArray<NSNumber *> *)shortcutButtonTypes {
     NSMutableArray *shortcutButtonTypes = [NSMutableArray array];
     
-    // Google
-    if (MyConfiguration.shared.showGoogleQuickLink) {
-        [shortcutButtonTypes addObject:@(EZTitlebarButtonTypeGoogle)];
-    }
-    
     // Apple Dictionary
     if (MyConfiguration.shared.showAppleDictionaryQuickLink) {
         [shortcutButtonTypes addObject:@(EZTitlebarButtonTypeAppleDic)];
-    }
-    
-    // Eudic
-    if (MyConfiguration.shared.showEudicQuickLink) {
-        // Fix https://github.com/tisfeng/Easydict/issues/957#issuecomment-3261505123
-        // Since edudic has multiple bundle ids, we don't check if installed.
-        [shortcutButtonTypes addObject:@(EZTitlebarButtonTypeEudicDic)];
     }
     
     return shortcutButtonTypes.copy;
@@ -360,16 +328,8 @@ typedef NS_ENUM(NSInteger, EZTitlebarButtonType) {
 - (EZOpenLinkButton *)buttonWithType:(EZTitlebarButtonType)buttonType {
     EZOpenLinkButton *button;
     switch (buttonType) {
-        case EZTitlebarButtonTypeGoogle: {
-            button = self.googleButton;
-            break;
-        }
         case EZTitlebarButtonTypeAppleDic: {
             button = self.appleDictionaryButton;
-            break;
-        }
-        case EZTitlebarButtonTypeEudicDic: {
-            button = self.eudicButton;
             break;
         }
         default:
@@ -387,15 +347,9 @@ typedef NS_ENUM(NSInteger, EZTitlebarButtonType) {
     if (type == EZTitlebarButtonTypePin) {
         shortcutStr = MyConfiguration.shared.pinShortcutString;
         hint = self.pin ? NSLocalizedString(@"unpin", nil) : NSLocalizedString(@"pin", nil);
-    } else if (type == EZTitlebarButtonTypeGoogle) {
-        shortcutStr = MyConfiguration.shared.googleShortcutString;
-        hint = NSLocalizedString(@"open_in_google", nil);
     } else if (type == EZTitlebarButtonTypeAppleDic) {
         shortcutStr = MyConfiguration.shared.appleDictShortcutString;
         hint = NSLocalizedString(@"open_in_apple_dictionary", nil);
-    } else if (type == EZTitlebarButtonTypeEudicDic) {
-        shortcutStr = MyConfiguration.shared.eudicDictShortcutString;
-        hint = NSLocalizedString(@"open_in_eudic", nil);
     }
     if (shortcutStr.length != 0) {
         toolTipStr = [NSString stringWithFormat:@"%@, %@", hint, shortcutStr];

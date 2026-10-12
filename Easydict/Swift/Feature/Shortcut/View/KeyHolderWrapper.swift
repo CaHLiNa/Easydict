@@ -150,8 +150,6 @@ extension KeyHolderWrapper {
                 .hide: DefaultsKeyWrapper(.hideShortcut),
                 .increaseFontSize: DefaultsKeyWrapper(.increaseFontSize),
                 .decreaseFontSize: DefaultsKeyWrapper(.decreaseFontSize),
-                .google: DefaultsKeyWrapper(.googleShortcut),
-                .eudic: DefaultsKeyWrapper(.eudicShortcut),
                 .appleDic: DefaultsKeyWrapper(.appleDictionaryShortcut),
             ]
         }

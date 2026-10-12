@@ -58,17 +58,24 @@ DEAD_PATTERNS = [
     r"openai_translate",
     r"github_models",
     r"agent_cli",
+    r"open_in_google",
+    r"open_in_eudic",
+    r"show_google_quick_link",
+    r"show_eudic_quick_link",
 ]
 DEAD_REGEX = re.compile("|".join(DEAD_PATTERNS), re.IGNORECASE)
 
 
 def source_blob() -> str:
+    # The pattern list below contains bare key fragments, so this file must not be
+    # part of the searched corpus or it would count as a reference to itself.
+    script_path = Path(__file__).resolve()
     chunks = []
     for root in SOURCE_ROOTS:
         for path in root.rglob("*"):
             if not path.is_file() or path.suffix not in SOURCE_SUFFIXES:
                 continue
-            if path.name == CATALOG.name:
+            if path.name == CATALOG.name or path.resolve() == script_path:
                 continue
             try:
                 chunks.append(path.read_text(encoding="utf-8", errors="ignore"))
