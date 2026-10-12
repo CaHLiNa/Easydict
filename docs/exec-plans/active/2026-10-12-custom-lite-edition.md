@@ -12,7 +12,7 @@
 
 - **Agent Name:** `ZCode`
 - **Model:** `magpie/clinepass/cline-pass/deepseek-v4.1-flash`
-- **Environment:** `macOS 27.0.1 / Xcode Unknown`
+- **Environment:** `macOS 27.0.1 / Xcode 27.0 (27A266a)`
 
 ## 背景
 
@@ -66,6 +66,7 @@ Easydict 面向通用用户维护了 30 个可注册服务、8 个设置标签�
 - [x] 设置页 8 → 6 个标签页，通用页合并隐私与关于，高级页移除 Beta 与 Anki。
 - [x] 更新入口与 appcast 隔离。
 - [x] 静态检查与提交准备。
+- [x] 构建、测试与启动冒烟测试（见“验证”）。
 
 ## 验证
 
@@ -75,14 +76,21 @@ Easydict 面向通用用户维护了 30 个可注册服务、8 个设置标签�
 - `swiftc -parse <每个改动的 .swift>`：9 个文件全部解析通过（仅语法，不做类型检查）。
 - `rg` 引用检查：无残留的 `checkUpdateItem`、`MenuItemStore`、`checkUpdaterViewModel`、
   `SettingTab.privacy/.about`、已删除的 TTS 选项引用。
-- 未运行：`xcodebuild build`、`xcodebuild test`。本机只有 Command Line Tools，缺少 Xcode 16+，
-  属环境阻塞，未作为通过记录。
-- 未运行：应用内手工验证（输入翻译、快捷键划词、鼠标划词、截图翻译、设置页外观）。
+- 未运行（首次记录时）：`xcodebuild build`、`xcodebuild test` 与应用内手工验证，当时本机只有
+  Command Line Tools。任务中期安装 Xcode 27.0 并完成首次启动组件安装后补做，结果如下。
+- `xcodebuild build`：BUILD SUCCEEDED，0 错误；格式与 lint 构建阶段未改动文件；产物
+  `Easydict-debug.app`。
+- `xcodebuild test`：453 个测试 / 47 个 suite，42 个 suite 通过，70 个问题。
+- 基线对照：原始提交 `ec8c87b` 同一命令为 86 个问题，失败 suite 为 OCR、GitHubCopilotService、
+  Service Translation Validation；OCR 的 61 个问题两边相同，服务校验由 23 个降为 4 个。
+  由本次改动引起的失败仅 3 个注册表断言，对应已下线服务。
+- 启动冒烟测试：进程稳定、无崩溃报告、日志无未注册服务告警，默认服务列表为有道与 DeepSeek。
+- 未运行：真机手工交互验证（输入翻译、划词、截图翻译的实际翻译效果）。
 
 ## 完成条件
 
 - 上述静态检查全部通过且无悬空引用。
 - `docs/histories/2026-10/2026-10-12-custom-lite-edition.md` 记录结果与验证状态。
-- 具备 Xcode 环境后补做 `xcodebuild build` 与应用内手工验证；两项通过后归档到
-  `docs/exec-plans/completed/2026-10/`。在此之前计划保持 active，第二阶段的文件与依赖删除
-  同属本计划后续工作。
+- 构建已通过；测试结果已按基线对照归因，其中 3 个注册表断言的处置需用户授权后随第二阶段处理。
+- 归档条件：真机手工交互验证通过，且三个已下线服务的测试文件处置完成，之后移动到
+  `docs/exec-plans/completed/2026-10/`。在此之前计划保持 active。
