@@ -2,7 +2,7 @@
 
 <!-- 文件名：YYYY-MM-DD-<slug>.md；命名规则见 docs/histories/README.md 的“命名与 slug”。 -->
 
-**Links:** plan `docs/exec-plans/active/2026-10-12-custom-lite-edition.md`
+**Links:** plan `docs/exec-plans/completed/2026-10/2026-10-12-custom-lite-edition.md`
 
 ### 执行上下文
 
@@ -49,6 +49,17 @@
   Xcode 工程删除 SPM 包引用与 framework 链接。
 - 工程文件通过 `xcodeproj` 库改写：移除 141 个文件引用、27 个分组与 1 个构建阶段，
   `project.pbxproj` 从 5571 行降至 4786 行。
+
+第三阶段（清理与交付）：
+
+- 本地化清理：新增 `scripts/find-dead-localization-keys.py`，以「源码中无任何引用」与
+  「键名属于已删除功能」两个条件交叉筛选，删除 223 个死键，`Localizable.xcstrings` 从 562 键
+  降至 339 键。仅删除可归因于本次删减的键；上游本就存在的无引用键（含 `%lld` 这类由 SwiftUI
+  运行时动态引用的格式键）保留不动。
+- 新增 `scripts/build-app.sh`：以上游未提供的本地身份构建 Release 包。构建时关闭代码签名，
+  构建后对内部框架与 App 分别做 ad-hoc 签名，并使用独立 Bundle ID `com.cahlina.easydict`，
+  避免与官方版本互相覆盖。
+- 发布产物安装到 `/Applications/Easydict.app`（Release 版，ad-hoc 签名，签名与 Bundle ID 已校验）。
 
 ### 设计意图
 
@@ -98,7 +109,23 @@
 - 第二阶段启动冒烟测试：进程稳定、无错误日志与崩溃报告，服务列表仍为 `(Youdao, DeepSeek)`。
 - 规模变化：应用 Swift 文件 371 → 256，测试 Swift 文件 56 → 36，源码文件合计 633 → 498；
   `Easydict-debug.app` 由 128 MB 降至 118 MB（Debug 构建）。
-- 未运行：真机手工交互验证（输入翻译、划词、截图翻译的实际翻译效果）。
+- 本地化清理验证：删除后 `jq -e .` 通过；逐键比对确认剩余 339 个键的内容与备份完全一致且无新增键；
+  重跑扫描为 0 个可删键；Debug 与 Release 构建均通过。
+- Release 构建与安装验证：`scripts/build-app.sh` 构建成功，`codesign --verify --strict` 通过，
+  Bundle ID 为 `com.cahlina.easydict`，安装到 `/Applications` 后启动正常、无崩溃报告。
+- 端到端功能验证（用应用自带的 HTTP 服务，测试后已恢复为关闭）：
+  - `POST /detect`：英文返回 `en`，中文返回 `zh-Hans`，验证改写后的系统语言检测单一来源逻辑。
+  - `POST /translate` + Youdao：单词 `good` 返回 `好`，整句返回「敏捷的棕色狐狸跳过了懒惰的狗。」，
+    验证保留的词典与翻译链路。
+  - `POST /streamTranslate` + BuiltInAI：`Knowledge is power.` 流式返回「知识」「就是」「力量」，
+    验证流式 AI 链路与替换后的 `BuiltInAIModel` 模型标识。
+  - `POST /streamTranslate` + DeepSeek：返回「缺少密钥」，模型标识为 `deepseek-v4-flash`，
+    说明服务已注册、仅待用户填入密钥。CustomOpenAI 同样返回「endpoint is invalid」，待用户配置。
+  - `POST /translate` + 已删除服务 DeepL：返回「不支持的服务类型: DeepL」，说明下线服务的请求
+    路径已彻底移除且错误降级正常、不崩溃。
+  - 运行期配置：三种窗口的服务列表均为 `(Youdao, DeepSeek)`。
+- 未运行：真实键盘/鼠标交互（全局快捷键、划词、截图翻译的实际触发）与设置页视觉确认，
+  属用户侧验收，需要人工在图形界面完成。
 
 ### 受影响文件
 
@@ -142,13 +169,22 @@
   `Easydict.xcodeproj/project.pbxproj`、`Easydict/App/Info.plist`。
 - 新增工具：`scripts/remove-xcode-paths.rb`（按清单批量移除工程文件引用与分组，可复用）。
 
+第三阶段：
+
+- 新增：`scripts/find-dead-localization-keys.py`（死键扫描与删除，幂等）、
+  `scripts/build-app.sh`（Release 打包与 ad-hoc 签名）。
+- 改动：`Easydict/App/Localizable.xcstrings`（562 → 339 键）。
+- 仓库外产物：`/Applications/Easydict.app`（Release、ad-hoc 签名、Bundle ID `com.cahlina.easydict`）。
+
 ### 后续事项
 
-- 遗留清理：`Localizable.xcstrings` 中已下线服务与已移除设置项的文案 key 仍保留，属无害残留，
-  需要时可用脚本按引用扫描清理。
 - 行为变化：古典中文检测不再受已移除的 Beta 开关限制，改为由 `isClassicalChineseDetectionEnabled`
   参数控制（默认启用）；如需恢复旧行为可在调用处传 `enableClassicalChineseDetection: false`。
 - 迁移提示：已保存的服务列表若包含已下线服务会被静默跳过；若某窗口的服务全被下线，需要到
   设置 → 服务重新添加。
-- 未验证：真机手工交互（输入翻译、快捷键划词、鼠标划词、截图翻译）与设置页视觉确认。
-- 分支 `custom/lite` 的提交尚未 push 到 Fork，按仓库规则需用户明确要求后执行。
+- 使用提示：`/Applications/Easydict.app` 为 ad-hoc 签名，每次重新构建后 macOS 的辅助功能与
+  屏幕录制授权需要重新授予；内置 HTTP 服务保持默认关闭，需要时在设置 → 高级中开启。
+- 待用户验收：全局快捷键、划词与截图翻译的实际触发，以及设置页（6 个标签页、6 个服务）的
+  视觉确认。
+- 上游同步：`upstream` 指向 tisfeng/Easydict，后续可按需挑选其 bug 修复合并到本分支。
+- 分支 `custom/lite` 已推送到 Fork。
