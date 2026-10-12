@@ -16,43 +16,12 @@ import SwiftUI
 struct GeneralTab: View {
     // MARK: Internal
 
-    class CheckUpdaterViewModel: ObservableObject {
-        // MARK: Lifecycle
-
-        init() {
-            updater
-                .publisher(for: \.automaticallyChecksForUpdates)
-                .assign(to: &$autoChecksForUpdates)
-        }
-
-        // MARK: Internal
-
-        @Published var autoChecksForUpdates = true {
-            didSet {
-                updater.automaticallyChecksForUpdates = autoChecksForUpdates
-            }
-        }
-
-        // MARK: Private
-
-        private let updater = MyConfiguration.shared.updater
-    }
-
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         Form {
             Section {
                 FirstAndSecondLanguageSettingView()
-                Picker(
-                    "setting.general.language.language_detect_optimize",
-                    selection: $languageDetectOptimize
-                ) {
-                    ForEach(LanguageDetectOptimize.allCases, id: \.rawValue) { option in
-                        Text(option.localizedStringResource)
-                            .tag(option)
-                    }
-                }
             } header: {
                 Text("setting.general.query_language.header")
             }
@@ -136,45 +105,6 @@ struct GeneralTab: View {
                     }
                 }
 
-                // Check for updates
-                HStack {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("check_for_updates")
-                        Text("lastest_version \(lastestVersion ?? version)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Button("check_now") {
-                        MyConfiguration.shared.updater.checkForUpdates()
-                    }
-                }
-
-                Toggle(isOn: $checkUpdaterViewModel.autoChecksForUpdates) {
-                    Text("auto_check_update ")
-                }
-
-                HStack {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("setting.general.startup_and_update.include_beta")
-                        Text("setting.general.startup_and_update.include_beta.description")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Toggle(
-                        isOn: $includeBetaUpdates.didSet(execute: { state in
-                            logSettings(["include_beta_updates": state])
-                            if state {
-                                MyConfiguration.shared.updater.checkForUpdates()
-                            }
-                        })
-                    ) {
-                        EmptyView()
-                    }
-                    .labelsHidden()
-                }
-
                 LaunchAtLogin.Toggle {
                     Text("launch_at_startup")
                 }
@@ -240,11 +170,49 @@ struct GeneralTab: View {
                 Text("hints_keyboard_shortcuts_font_size")
                     .font(.footnote)
             }
+
+            Section {
+                HStack {
+                    Text("crash_log")
+                    Toggle("allow_collect_crash_log", isOn: $allowCollectCrashLog)
+                }
+                HStack {
+                    Text("analytics")
+                    Toggle("allow_collect_analytics", isOn: $allowCollectAnalytics)
+                }
+            } header: {
+                Text("privacy")
+            }
+
+            Section {
+                HStack {
+                    Text(appName)
+                        .font(.headline)
+                    Spacer()
+                    Text("current_version \(version)")
+                        .foregroundColor(.secondary)
+                }
+
+                HStack(spacing: 12) {
+                    Button {
+                        NSWorkspace.shared.open(
+                            URL(string: "https://github.com/tisfeng/Easydict")!
+                        )
+                    } label: {
+                        Label("setting.about.github_link", systemSymbol: .starFill)
+                    }
+
+                    Button {
+                        HostWindowManager.shared.showAcknowWindow()
+                    } label: {
+                        Label("setting.about.acknowledgements", systemSymbol: .checkmarkSealFill)
+                    }
+                }
+            } header: {
+                Text("setting.about")
+            }
         }
         .formStyle(.grouped)
-        .task {
-            lastestVersion = await fetchRepoLatestVersion(EZGithubRepoEasydict)
-        }
         .alert("hide_menu_bar_icon", isPresented: $showRefuseAlert) {
             Button("ok") {
                 showRefuseAlert = false
@@ -272,13 +240,6 @@ struct GeneralTab: View {
     @EnvironmentObject private var languageState: LanguageState
     @State private var showRefuseAlert = false
     @State private var showHideMenuBarIconAlert = false
-
-    @StateObject private var checkUpdaterViewModel = CheckUpdaterViewModel()
-
-    @State private var lastestVersion: String?
-
-    // Query language
-    @Default(.languageDetectOptimize) private var languageDetectOptimize
 
     // Input textfield
     @Default(.clearQueryWhenInputTranslate) private var clearInput
@@ -310,7 +271,12 @@ struct GeneralTab: View {
     @Default(.fontSizeOptionIndex) private var fontSizeOptionIndex
     @Default(.enableMarkdownRendering) private var enableMarkdownRendering
 
-    @Default(.includeBetaUpdates) private var includeBetaUpdates
+    @Default(.allowCrashLog) private var allowCollectCrashLog
+    @Default(.allowAnalytics) private var allowCollectAnalytics
+
+    private var appName: String {
+        Bundle.main.infoDictionary?["CFBundleName"] as? String ?? ""
+    }
 
     private var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""

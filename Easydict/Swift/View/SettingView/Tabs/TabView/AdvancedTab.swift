@@ -22,16 +22,6 @@ struct AdvancedTab: View {
 
     var body: some View {
         Form {
-            Section {
-                Toggle(isOn: $enableBetaFeature) {
-                    AdvancedTabItemView(
-                        color: .blue,
-                        icon: .hammerFill,
-                        labelText: "setting.advance.enable_beta_feature"
-                    )
-                }
-            }
-
             // Items image color order: blue, green, orange, purple, red, mint, yellow, cyan, indigo
 
             // General settings section
@@ -425,7 +415,6 @@ struct AdvancedTab: View {
                 Text("setting.advance.header.http_server")
             }
 
-            AdvancedTabAnkiSection()
             // Vocabulary notebook
             Section {
                 Toggle(isOn: $enableVocabularyNotebook) {
@@ -466,8 +455,6 @@ struct AdvancedTab: View {
     }
 
     // MARK: Private
-
-    @Default(.enableBetaFeature) private var enableBetaFeature
 
     @Default(.defaultTTSServiceType) private var defaultTTSServiceType
     @Default(.preferYoudaoTTSForEnglishWord) private var preferYoudaoTTSForEnglishWord

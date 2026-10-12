@@ -16,9 +16,7 @@ enum SettingTab: Int {
     case disabled
     case advanced
     case shortcut
-    case privacy
     case favorites
-    case about
 }
 
 // MARK: - SettingView
@@ -51,14 +49,6 @@ struct SettingView: View {
             AdvancedTab()
                 .tabItem { Label("advanced", systemImage: "gearshape.2") }
                 .tag(SettingTab.advanced)
-
-            PrivacyTab()
-                .tabItem { Label("privacy", systemImage: "hand.raised.square") }
-                .tag(SettingTab.privacy)
-
-            AboutTab()
-                .tabItem { Label("setting.about", systemImage: "info.bubble") }
-                .tag(SettingTab.about)
         }
         .background(
             WindowAccessor(window: $window.didSet(execute: { _ in
@@ -81,10 +71,6 @@ struct SettingView: View {
         let height: Double = switch selection {
         case .disabled:
             500
-        case .privacy:
-            340
-        case .about:
-            300
         case .favorites:
             640
         default:

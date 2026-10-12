@@ -13,9 +13,6 @@ import Foundation
 
 enum TTSServiceType: String, CaseIterable {
     case youdao = "Youdao"
-    case bing = "Bing"
-    case google = "Google"
-    case baidu = "Baidu"
     case apple = "Apple"
 }
 
@@ -26,12 +23,6 @@ extension TTSServiceType: CustomLocalizedStringResourceConvertible {
         switch self {
         case .youdao:
             "setting.tts_service.options.youdao"
-        case .bing:
-            "setting.tts_service.options.bing"
-        case .google:
-            "setting.tts_service.options.google"
-        case .baidu:
-            "setting.tts_service.options.baidu"
         case .apple:
             "setting.tts_service.options.apple"
         }
@@ -52,12 +43,6 @@ extension TTSServiceType: Defaults.Serializable {
             switch value {
             case .youdao:
                 return ServiceType.youdao.rawValue
-            case .bing:
-                return ServiceType.bing.rawValue
-            case .google:
-                return ServiceType.google.rawValue
-            case .baidu:
-                return ServiceType.baidu.rawValue
             case .apple:
                 return ServiceType.apple.rawValue
             }
@@ -68,12 +53,6 @@ extension TTSServiceType: Defaults.Serializable {
             switch object {
             case "Youdao":
                 return .youdao
-            case "Bing":
-                return .bing
-            case "Google":
-                return .google
-            case "Baidu":
-                return .baidu
             case "Apple":
                 return .apple
             default:

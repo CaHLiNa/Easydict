@@ -17,8 +17,10 @@ class GlobalContext: NSObject {
     private override init() {
         self.updaterHelper = SPUUpdaterHelper()
         self.userDriverHelper = SPUUserDriverHelper()
+        // The updater is intentionally not started: this build ships without an appcast
+        // feed, so starting it would only surface feed errors to the user.
         self.updaterController = SPUStandardUpdaterController(
-            startingUpdater: true,
+            startingUpdater: false,
             updaterDelegate: updaterHelper,
             userDriverDelegate: userDriverHelper
         )

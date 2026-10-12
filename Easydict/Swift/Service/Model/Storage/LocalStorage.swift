@@ -418,8 +418,7 @@ final class LocalStorage: NSObject {
 
     private let defaultServiceTypeIDs: [String] = [
         ServiceType.youdao.rawValue,
-        ServiceType.deepL.rawValue,
-        ServiceType.builtInAI.rawValue,
+        ServiceType.deepSeek.rawValue,
     ]
 
     /// Raw dictionary backing service query statistics.
