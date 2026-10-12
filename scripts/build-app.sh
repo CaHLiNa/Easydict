@@ -3,13 +3,17 @@
 #
 # The upstream Release configuration signs with the project owner's Developer ID
 # and development team, which this fork does not have. The build therefore
-# overrides signing with an ad-hoc identity and uses its own bundle identifier so
-# the app can coexist with an official Easydict installation.
+# disables build-time signing and signs the bundle here, using a stable local
+# identity: macOS binds privacy grants to the signing certificate, so a real
+# certificate keeps Accessibility and Screen Recording permissions across
+# rebuilds, while an ad-hoc signature is invalidated on every build.
 #
 # Environment overrides:
-#   BUNDLE_ID     bundle identifier (default com.cahlina.easydict)
-#   DERIVED_DATA  build directory
-#   CONFIGURATION build configuration (default Release)
+#   BUNDLE_ID      bundle identifier (default com.cahlina.easydict)
+#   SIGN_IDENTITY  codesigning identity; default is the first local
+#                  "Apple Development" certificate, falling back to ad-hoc ("-")
+#   DERIVED_DATA   build directory
+#   CONFIGURATION  build configuration (default Release)
 set -eu
 
 cd "$(dirname "$0")/.."
@@ -18,6 +22,8 @@ BUNDLE_ID="${BUNDLE_ID:-com.cahlina.easydict}"
 CONFIGURATION="${CONFIGURATION:-Release}"
 CHECKOUT_ID="$(git rev-parse --show-toplevel | sed -e "s|^$HOME/||" -e 's|^\.||' -e 's|/|_|g')"
 DERIVED_DATA="${DERIVED_DATA:-$HOME/Library/Developer/Xcode/DerivedData/Easydict-Agent/$CHECKOUT_ID-release}"
+SIGN_IDENTITY="${SIGN_IDENTITY:-$(security find-identity -v -p codesigning 2> /dev/null | awk -F'"' '/Apple Development/ { print $2; exit }')}"
+SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 
 xcodebuild build \
   -workspace Easydict.xcworkspace \
@@ -30,19 +36,21 @@ xcodebuild build \
 
 APP_PATH="$DERIVED_DATA/Build/Products/$CONFIGURATION/Easydict.app"
 
-# Signing is off for the build, so ad-hoc sign the bundle here: an unsigned
-# executable cannot start on Apple silicon.
+# Signing is off for the build, so sign the bundle here. Nested code must be
+# signed before the outer bundle, and an unsigned executable cannot start on
+# Apple silicon.
 FRAMEWORKS_DIR="$APP_PATH/Contents/Frameworks"
 if [ -d "$FRAMEWORKS_DIR" ]; then
   find "$FRAMEWORKS_DIR" -maxdepth 1 -name '*.framework' -print0 |
     while IFS= read -r -d '' framework; do
-      codesign --force --sign - "$framework"
+      codesign --force --sign "$SIGN_IDENTITY" "$framework"
     done
 fi
-codesign --force --sign - "$APP_PATH"
+codesign --force --sign "$SIGN_IDENTITY" "$APP_PATH"
 codesign --verify --strict "$APP_PATH"
 
 echo
 echo "built: $APP_PATH"
 echo "bundle id: $(plutil -extract CFBundleIdentifier raw "$APP_PATH/Contents/Info.plist")"
-echo "signature: $(codesign -dv "$APP_PATH" 2>&1 | grep -m1 Signature)"
+echo "signed with: $SIGN_IDENTITY"
+echo "requirement: $(codesign -dr - "$APP_PATH" 2>&1 | sed -n 's/^designated => //p')"
