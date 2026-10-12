@@ -16,7 +16,7 @@ import Foundation
 /// streaming pipeline as a model-agnostic per-service setting, so current
 /// and future DeepSeek models opt in without code changes.
 @objc(EZDeepSeekService)
-class DeepSeekService: OpenAIService {
+class DeepSeekService: BaseOpenAIService {
     // MARK: Public
 
     public override func cancelStream() {

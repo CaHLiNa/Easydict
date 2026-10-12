@@ -6,25 +6,13 @@
 //  Copyright © 2024 izual. All rights reserved.
 //
 
-import Defaults
 import Foundation
-import Sparkle
 
 @objcMembers
 class GlobalContext: NSObject {
     // MARK: Lifecycle
 
     private override init() {
-        self.updaterHelper = SPUUpdaterHelper()
-        self.userDriverHelper = SPUUserDriverHelper()
-        // The updater is intentionally not started: this build ships without an appcast
-        // feed, so starting it would only surface feed errors to the user.
-        self.updaterController = SPUStandardUpdaterController(
-            startingUpdater: false,
-            updaterDelegate: updaterHelper,
-            userDriverDelegate: userDriverHelper
-        )
-
         super.init()
 
         reloadLLMServicesSubscribers()
@@ -32,24 +20,7 @@ class GlobalContext: NSObject {
 
     // MARK: Internal
 
-    /// Sparkle Updater Helpers
-    /// https://sparkle-project.org/documentation/publishing/#publishing-an-update
-
-    class SPUUpdaterHelper: NSObject, SPUUpdaterDelegate {
-        func allowedChannels(for updater: SPUUpdater) -> Set<String> {
-            Defaults[.includeBetaUpdates] ? Set(["beta"]) : []
-        }
-    }
-
-    class SPUUserDriverHelper: NSObject, SPUStandardUserDriverDelegate {
-        var supportsGentleScheduledUpdateReminders: Bool {
-            true
-        }
-    }
-
     static let shared = GlobalContext()
-
-    let updaterController: SPUStandardUpdaterController
 
     /// Rebuilds configuration observers for stream services used by any window.
     ///
@@ -84,9 +55,6 @@ class GlobalContext: NSObject {
     }
 
     // MARK: Private
-
-    private let updaterHelper: SPUUpdaterHelper
-    private let userDriverHelper: SPUUserDriverHelper
 
     // TODO: This code is not good, we should improve it later.
 

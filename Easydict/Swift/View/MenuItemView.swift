@@ -48,7 +48,6 @@ struct MenuItemView: View {
             Divider()
 
             translateAndReplaceItem.keyboardShortcut(.translateAndReplace)
-            polishAndReplaceItem.keyboardShortcut(.polishAndReplace)
 
             Divider()
 
@@ -92,10 +91,6 @@ struct MenuItemView: View {
 
     @ViewBuilder private var pasteboardTranslateItem: some View {
         menuItem(for: .pasteboardTranslate)
-    }
-
-    @ViewBuilder private var polishAndReplaceItem: some View {
-        menuItem(for: .polishAndReplace)
     }
 
     @ViewBuilder private var translateAndReplaceItem: some View {

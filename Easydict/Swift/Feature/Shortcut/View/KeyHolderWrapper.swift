@@ -135,7 +135,6 @@ extension KeyHolderWrapper {
                 .showMiniWindow: DefaultsKeyWrapper(.showMiniWindowShortcut),
                 .pasteboardTranslate: DefaultsKeyWrapper(.pasteboardTranslateShortcut),
                 .translateAndReplace: DefaultsKeyWrapper(.translateAndReplaceShortcut),
-                .polishAndReplace: DefaultsKeyWrapper(.polishAndReplaceShortcut),
                 .screenshotOCR: DefaultsKeyWrapper(.screenshotOCRShortcut),
                 .pasteboardOCR: DefaultsKeyWrapper(.pasteboardOCRShortcut),
                 .showOCRWindow: DefaultsKeyWrapper(.showOCRWindowShortcut),

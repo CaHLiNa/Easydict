@@ -1,4 +1,4 @@
-## 2026-10-12 | 任务：收敛服务注册表与设置页，隔离上游更新
+## 2026-10-12 | 任务：精简定制（服务与设置收敛、下线代码物理删除）
 
 <!-- 文件名：YYYY-MM-DD-<slug>.md；命名规则见 docs/histories/README.md 的“命名与 slug”。 -->
 
@@ -8,7 +8,7 @@
 
 - **Agent Name:** `ZCode`
 - **Model:** `magpie/clinepass/cline-pass/deepseek-v4.1-flash`
-- **Environment:** `macOS 27.0.1 / Xcode Unknown`
+- **Environment:** `macOS 27.0.1 / Xcode 27.0 (27A266a)`
 
 ### 用户请求
 
@@ -17,6 +17,8 @@
 内置 HTTP 服务；精简设置页，移除 Anki 与上游自动更新。
 
 ### 变更
+
+第一阶段（收敛入口）：
 
 - 服务注册表从 30 项收敛为 6 项：Apple Dictionary、有道、Apple、DeepSeek、内置 AI、
   自定义 OpenAI。
@@ -28,12 +30,36 @@
 - `Info.plist` 移除 `SUFeedURL` 与 `SUPublicEDKey`，`SUEnableAutomaticChecks` 置为 false；
   Sparkle 控制器改为不启动。
 
+第二阶段（物理删除，共 31,761 行删除 / 166 行新增）：
+
+- 删除 21 个服务目录：Ali、AITool（润色与总结）、Baidu、Bing、Caiyun、Claude、ClaudeCode、
+  CodexCLI、DeepL、Doubao、Gemini、GitHub Models、GitHubCopilot、Google、Groq、MiniMax、
+  NiuTrans、Ollama、Tencent、Volcano、Zhipu，以及 Dictionary/MDict 与 `OpenAIService.swift`。
+  保留 `BaseOpenAIService`、`StreamService` 等流式基础设施。
+- 删除连带功能：AnkiConnect 与结果页 Anki 按钮、`AdvancedTabAnkiSection`、`PrivacyTab`、
+  三个 CLI 服务的配置视图、Codex 运行时脚本与 `Prepare bundled Codex` 构建阶段、
+  已下线服务的测试文件、`LanguageDetectOptimize` 与其扩展、无引用的 `ServiceAPIType.swift`、
+  `AppPathManager+Codex.swift` 与 CLI 日志目录属性。
+- 连带引用改造：`DetectManager` 改为系统语言检测单一来源；`ActionManager` 与
+  `ShortcutAction`、`MenuBar` 移除润色链路；`StreamService+Configuration` 与 `LocalStorage`
+  移除 Codex 分支；`APIKey`、`Defaults.Keys`、`ServiceConfigurationKey` 移除已下线服务、
+  Anki、Beta 与语言检测优化配置；`EZResultView` 与 `EZSchemeParser` 移除对应钩子；
+  `BuiltInAIService` 用本地 `BuiltInAIModel` 枚举替代已删除服务的模型枚举。
+- 移除 Sparkle 依赖：`GlobalContext` 不再持有更新器，`MyConfiguration` 移除更新相关属性，
+  Xcode 工程删除 SPM 包引用与 framework 链接。
+- 工程文件通过 `xcodeproj` 库改写：移除 141 个文件引用、27 个分组与 1 个构建阶段，
+  `project.pbxproj` 从 5571 行降至 4786 行。
+
 ### 设计意图
 
-以注册表收口代替删除文件：`LocalStorage` 对未注册类型返回 nil 并跳过，旧配置不会导致启动异常，
-且不必改动 `project.pbxproj`，在本机缺少 Xcode 的情况下把风险控制在可回退范围。保留
-`builtInAI` 是因为「翻译并替换」直接构造 `BuiltInAIService`；朗读选项与服务注册表必须一致，
-否则朗读会取到空服务。Anki 只断开设置入口，Objective-C 结果视图保持不动。
+第一阶段以注册表收口代替删除文件，是因为当时缺少 Xcode、无法验证构建；先收口可在不触碰工程
+文件的前提下达成界面精简，并让旧配置平滑降级。第二阶段在 Xcode 就绪后用 `xcodeproj` 改写工程
+引用而非手改文本，并对每批删除重新构建，把工程损坏风险控制在可回退范围。
+
+保留 `builtInAI` 是因为「翻译并替换」直接构造 `BuiltInAIService`，且它是唯一无需密钥的 AI 服务。
+删除润色链路而非保留空壳，是因为其服务已下线、注册表查找必然失败。`TTSServiceType` 与朗读
+实现必须保持一致，否则朗读会取到空服务。古典中文检测原先叠了一层 `beta` 开关，该开关随 Beta
+设置项一并移除，检测改由 `isClassicalChineseDetectionEnabled` 参数单独控制。
 
 ### 验证
 
@@ -60,12 +86,23 @@
   - 由本次改动引起的失败共 3 个，均为注册表断言：`ClaudeCodeServiceTests.factoryRegistration`、
     `CodexCLIServiceTests.factoryRegistration`、`GitHubCopilotServiceTests` 的注册表断言。这三个
     服务已被有意移出注册表，断言按新事实已不成立。
-- 启动冒烟测试：直接执行 `Easydict-debug.app` 二进制，进程稳定存活、无崩溃报告，运行日志不含
-  `Unsupported service type` 或断言错误；`com.izual.Easydict-debug` 域下三种窗口的服务列表均为
-  `(Youdao, DeepSeek)`，确认默认服务改动在运行期生效。
+- 启动冒烟测试（第一阶段）：直接执行 `Easydict-debug.app` 二进制，进程稳定存活、无崩溃报告，
+  运行日志不含 `Unsupported service type` 或断言错误；`com.izual.Easydict-debug` 域下三种窗口的
+  服务列表均为 `(Youdao, DeepSeek)`，确认默认服务改动在运行期生效。
+- 第二阶段构建：删除 31,761 行后 `xcodebuild build` 仍为 BUILD SUCCEEDED，0 错误。
+- 第二阶段测试：211 个测试 / 28 个 suite，65 个问题，失败 suite 只剩 Apple OCR Engine Image
+  Tests（61 个，与基线逐项相同）与 Service Translation Validation（4 个，剩余已注册服务缺少
+  密钥）。第一阶段由改动引起的 3 个注册表断言失败已随测试文件删除消失。
+- 引用扫描：从被删文件提取 236 个类型名后全库扫描，无残留引用；`plutil -lint` 与
+  `xcodeproj` 重新解析工程文件均通过。
+- 第二阶段启动冒烟测试：进程稳定、无错误日志与崩溃报告，服务列表仍为 `(Youdao, DeepSeek)`。
+- 规模变化：应用 Swift 文件 371 → 256，测试 Swift 文件 56 → 36，源码文件合计 633 → 498；
+  `Easydict-debug.app` 由 128 MB 降至 118 MB（Debug 构建）。
 - 未运行：真机手工交互验证（输入翻译、划词、截图翻译的实际翻译效果）。
 
 ### 受影响文件
+
+第一阶段：
 
 - `Easydict/Swift/Service/Model/QueryServiceFactory.swift`
 - `Easydict/Swift/Service/Model/Storage/LocalStorage.swift`
@@ -78,18 +115,40 @@
 - `Easydict/Swift/View/SettingView/Tabs/TabView/GeneralTab.swift`
 - `Easydict/App/Info.plist`
 
+第二阶段（新增或改动的关键路径，完整清单见 `git show`）：
+
+- 删除：`Easydict/Swift/Service/` 下 21 个服务目录、`Dictionary/MDict`、`OpenAIService.swift`、
+  `Easydict/Swift/Feature/AnkiConnect/`、三个 CLI 服务配置视图、
+  `AdvancedTabAnkiSection.swift`、`PrivacyTab.swift`、`LanguageDetectOptimizeExtensions.swift`、
+  `ServiceAPIType.swift`、`AppPathManager+Codex.swift`、`scripts/codex-runtime/`、
+  以及 20 个已下线服务的测试文件。
+- 改动：`Easydict/Swift/Model/DetectManager.swift`、
+  `Easydict/Swift/Feature/ActionManager/ActionManager.swift`、
+  `Easydict/Swift/Service/OpenAI/StreamService+Configuration.swift`、
+  `Easydict/Swift/Service/OpenAI/StreamService.swift`、
+  `Easydict/Swift/Service/DeepSeek/DeepSeekService.swift`、
+  `Easydict/Swift/Service/BuiltInAI/BuiltInAIService.swift`、
+  `Easydict/Swift/Feature/DefaultAPIKeys/APIKey.swift`、
+  `Easydict/Swift/Feature/Configuration/{Defaults.Keys+Extension,MyConfiguration,ServiceConfigurationKey,Configuration+UserData}.swift`、
+  `Easydict/Swift/Feature/Shortcut/Model/ShortcutAction.swift`、
+  `Easydict/Swift/Feature/Shortcut/View/KeyHolderWrapper.swift`、
+  `Easydict/Swift/View/SettingView/Tabs/TabView/ServiceTabListViews.swift`、
+  `Easydict/Swift/Utility/AppPathManager/AppPathManager+Logs.swift`、
+  `Easydict/App/EasydictApp.swift`、
+  `Easydict/objc/ViewController/View/WordResultView/EZWordResultView.m`、
+  `Easydict/objc/ViewController/View/ResultView/EZResultView.m`、
+  `Easydict/objc/Utility/EZLinkParser/EZSchemeParser.m`、
+  `EasydictTests/Service/AppleLanguageDetectorTests.swift`、
+  `Easydict.xcodeproj/project.pbxproj`、`Easydict/App/Info.plist`。
+- 新增工具：`scripts/remove-xcode-paths.rb`（按清单批量移除工程文件引用与分组，可复用）。
+
 ### 后续事项
 
-- 待决：三个注册表断言（`ClaudeCodeServiceTests`、`CodexCLIServiceTests`、
-  `GitHubCopilotServiceTests`）随服务下线而失败。按仓库规则，测试文件的修改需要用户明确授权，
-  故未在本轮改动；建议在第二阶段删除这三个已下线服务的测试文件并同步测试 target 引用。
-- 第二阶段：物理删除已下线服务的源文件与 `project.pbxproj` 引用、移除 Codex 运行时构建阶段、
-  彻底解绑 Sparkle、删除 Anki 运行时代码。
-- 润色与总结服务已从注册表移除，但 `ActionManager` 仍会为「润色并替换」直接构造
-  `PolishingService`；若不使用润色功能，可在第二阶段一并移除该菜单项与快捷键。
-- 迁移限制：已保存的服务列表若只包含已下线服务（例如只有 DeepL），该窗口会显示为空列表，
-  需要到设置 → 服务重新添加；未注册类型会被 `LocalStorage` 静默跳过，不会影响启动。
-- 迁移限制：若此前手动开启过 Anki，`enableAnkiConnect` 仍为 true，结果页 Anki 按钮因未改动
-  Objective-C 结果视图而继续显示；需要时可手动关闭该 UserDefaults 值。
-- 清理项：`PrivacyTab.swift`、`AdvancedTabAnkiSection.swift`、`LanguageDetectOptimize` 的
-  选项扩展与相关本地化 key 已不再被引用，留待第二阶段一并处理。
+- 遗留清理：`Localizable.xcstrings` 中已下线服务与已移除设置项的文案 key 仍保留，属无害残留，
+  需要时可用脚本按引用扫描清理。
+- 行为变化：古典中文检测不再受已移除的 Beta 开关限制，改为由 `isClassicalChineseDetectionEnabled`
+  参数控制（默认启用）；如需恢复旧行为可在调用处传 `enableClassicalChineseDetection: false`。
+- 迁移提示：已保存的服务列表若包含已下线服务会被静默跳过；若某窗口的服务全被下线，需要到
+  设置 → 服务重新添加。
+- 未验证：真机手工交互（输入翻译、快捷键划词、鼠标划词、截图翻译）与设置页视觉确认。
+- 分支 `custom/lite` 的提交尚未 push 到 Fork，按仓库规则需用户明确要求后执行。

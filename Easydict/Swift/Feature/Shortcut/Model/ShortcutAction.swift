@@ -22,7 +22,6 @@ public enum ShortcutAction: String, Identifiable, CaseIterable {
     case toggleAutoSelectText
     case showMiniWindow
     case pasteboardTranslate
-    case polishAndReplace
     case translateAndReplace
     case silentScreenshotOCR
 
@@ -62,7 +61,6 @@ extension ShortcutAction {
         .toggleAutoSelectText,
         .showMiniWindow,
         .pasteboardTranslate,
-        .polishAndReplace,
         .translateAndReplace,
         .silentScreenshotOCR,
         .screenshotOCR,
@@ -166,12 +164,6 @@ extension ShortcutAction {
                 icon: .docOnClipboard,
                 defaultsKey: .pasteboardTranslateShortcut,
                 action: { windowManager.pasteboardTranslate(.fixed) }
-            ),
-            .polishAndReplace: .init(
-                titleKey: "menu_polish_and_replace",
-                icon: .wandAndStars,
-                defaultsKey: .polishAndReplaceShortcut,
-                action: { await ActionManager.shared.polishAndReplace() }
             ),
             .translateAndReplace: .init(
                 titleKey: "menu_translate_and_replace",

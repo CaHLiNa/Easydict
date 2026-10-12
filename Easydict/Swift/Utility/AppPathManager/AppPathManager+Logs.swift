@@ -30,18 +30,6 @@ extension AppPathManager {
         ocrImageDirectory.appendingPathComponent("ocr_cropped_image.png", isDirectory: false)
     }
 
-    var codexCLILogDirectory: URL {
-        logsDirectory.appendingPathComponent("codex-cli", isDirectory: true)
-    }
-
-    var claudeCodeLogDirectory: URL {
-        logsDirectory.appendingPathComponent("claude-code", isDirectory: true)
-    }
-
-    var githubCopilotLogDirectory: URL {
-        logsDirectory.appendingPathComponent("github-copilot", isDirectory: true)
-    }
-
     /// The previous CocoaLumberjack-compatible log root.
     var legacyAppLogDirectory: URL {
         cachesDirectory.appendingPathComponent("MMLogs", isDirectory: true)

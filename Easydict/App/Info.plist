@@ -60,7 +60,5 @@
 	<true/>
 	<key>NSSupportsSuddenTermination</key>
 	<true/>
-	<key>SUEnableAutomaticChecks</key>
-	<false/>
 </dict>
 </plist>

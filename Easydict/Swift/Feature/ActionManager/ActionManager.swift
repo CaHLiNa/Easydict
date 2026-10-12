@@ -23,7 +23,6 @@ class ActionManager: NSObject {
     @objc static let shared = ActionManager()
 
     var translateService = BuiltInAIService()
-    var polishService = PolishingService()
 
     // MARK: - Text Field Detection and Access
 
@@ -32,29 +31,17 @@ class ActionManager: NSObject {
     /// Translate selected text and replace it with the translation result
     func translateAndReplace() async {
         logInfo("Translate and Replace")
-        await executeTextReplacementAction(.translate)
-    }
-
-    /// Polish selected text and replace it with the polished result
-    func polishAndReplace() async {
-        logInfo("Polish and Replace")
-        await executeTextReplacementAction(.polish)
+        await executeTextReplacementAction()
     }
 
     // MARK: Private
-
-    /// Type of text processing action
-    private enum ProcessingType {
-        case translate
-        case polish
-    }
 
     private let systemUtility = SystemUtility.shared
 
     // MARK: - Core Action Methods
 
-    /// Common method to execute text replacement actions
-    private func executeTextReplacementAction(_ type: ProcessingType) async {
+    /// Common method to execute the text replacement action
+    private func executeTextReplacementAction() async {
         let enableSelectAll = Defaults[.autoSelectAllTextFieldText]
         let elementInfo = await systemUtility.focusedElementInfo(enableSelectAll: enableSelectAll)
 
@@ -65,12 +52,12 @@ class ActionManager: NSObject {
         }
 
         guard let queryText, !queryText.isEmpty else {
-            logInfo("No text selected or focused for \(type), skipping action")
+            logInfo("No text selected or focused, skipping action")
             return
         }
 
         // Prepare translation request
-        guard let request = await prepareTranslationRequest(queryText: queryText, type: type) else {
+        guard let request = await prepareTranslationRequest(queryText: queryText) else {
             return
         }
 
@@ -81,47 +68,31 @@ class ActionManager: NSObject {
     // MARK: - Helper Methods
 
     /// Prepare translation request from text field information
-    /// - Parameters:
-    ///   - elementInfo: Information about the current focused element
-    ///   - type: The type of processing (translate or polish)
+    /// - Parameter queryText: Text selected or focused in the target application
     /// - Returns: A configured TranslationRequest or nil if preparation fails
-    private func prepareTranslationRequest(
-        queryText: String,
-        type: ProcessingType
-    ) async
-        -> TranslationRequest? {
+    private func prepareTranslationRequest(queryText: String) async -> TranslationRequest? {
         // Detect language and target
         let queryModel = try? await DetectManager().detectText(queryText)
         guard let detectedLanguage = queryModel?.detectedLanguage,
               let targetLanguage = queryModel?.queryTargetLanguage
         else {
-            logError("Failed to detect target language, skipping \(type) and replace")
+            logError("Failed to detect target language, skipping translate and replace")
             return nil
         }
 
         // Create base request
-        var request = TranslationRequest(
+        return TranslationRequest(
             text: queryText,
             sourceLanguage: detectedLanguage.code,
             targetLanguage: targetLanguage.code,
-            serviceType: "",
+            serviceType: translateService.serviceType().rawValue,
             queryType: .translation
         )
-
-        // Set service type based on processing type
-        switch type {
-        case .translate:
-            request.serviceType = translateService.serviceType().rawValue
-        case .polish:
-            request.serviceType = polishService.serviceType().rawValue
-        }
-
-        return request
     }
 
     // MARK: - Streaming Service Methods
 
-    /// Perform translation or polishing using a streaming service
+    /// Perform translation using a streaming service
     private func performStreamingService(
         request: TranslationRequest,
         elementInfo: FocusedElementInfo

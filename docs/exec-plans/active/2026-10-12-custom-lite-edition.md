@@ -43,6 +43,25 @@ Easydict 面向通用用户维护了 30 个可注册服务、8 个设置标签�
 5. 移除菜单栏与应用菜单的更新入口，隔离 Info.plist 的 appcast 配置。
 6. 运行静态检查并提交。
 
+## 第二阶段范围（物理删除，已完成）
+
+用户明确要求删除代码而非仅从前端隐藏。删除对象与其工程引用一并移除：
+
+- 服务源码：Ali、AITool（润色/总结）、Baidu、Bing、Caiyun、Claude、ClaudeCode、CodexCLI、
+  DeepL、Doubao、Gemini、GitHub Models、GitHubCopilot、Google、Groq、MiniMax、NiuTrans、
+  Ollama、Tencent、Volcano、Zhipu、Dictionary/MDict、OpenAI 的具体服务（保留
+  BaseOpenAIService、StreamService 等流式基础设施）。
+- 连带代码：AnkiConnect 功能与结果页 Anki 按钮、AdvancedTabAnkiSection、PrivacyTab；
+  三个已下线 CLI 服务的配置视图；Codex 运行时脚本与 `Prepare bundled Codex` 构建阶段；
+  已下线服务的测试文件（用户已授权）。
+- 受影响调用点：DetectManager（语言检测改为 Apple 单一来源）、ActionManager（移除润色链路）、
+  StreamService 与 StreamService+Configuration（移除 Codex 分支）、LocalStorage（移除 Codex
+  配置迁移）、APIKey 与 Defaults 键（移除已下线服务与 Anki 配置）。
+- 验证：每批删除后运行 `xcodebuild build`，全部完成后运行 `xcodebuild test` 并与第一阶段基线
+  对照，最后重新做启动冒烟测试。
+- 非目标：不改动保留下线的服务与功能行为；不重新设计查询流程；不改动 Pods 与仍有引用的
+  SPM 依赖。
+
 ## 风险与决策
 
 - 本机无 Xcode，无法运行 `xcodebuild`，因此本阶段改动只经过语法解析、plist、本地化 key 与
@@ -67,6 +86,8 @@ Easydict 面向通用用户维护了 30 个可注册服务、8 个设置标签�
 - [x] 更新入口与 appcast 隔离。
 - [x] 静态检查与提交准备。
 - [x] 构建、测试与启动冒烟测试（见“验证”）。
+- [x] 第二阶段物理删除：服务与连带功能文件、工程引用、Codex 构建阶段、Sparkle 依赖，
+  删除后构建与测试重新通过。
 
 ## 验证
 
@@ -86,11 +107,19 @@ Easydict 面向通用用户维护了 30 个可注册服务、8 个设置标签�
   由本次改动引起的失败仅 3 个注册表断言，对应已下线服务。
 - 启动冒烟测试：进程稳定、无崩溃报告、日志无未注册服务告警，默认服务列表为有道与 DeepSeek。
 - 未运行：真机手工交互验证（输入翻译、划词、截图翻译的实际翻译效果）。
+- 第二阶段构建与测试：删除 31,761 行后 `xcodebuild build` 仍为 BUILD SUCCEEDED；测试为
+  211 个测试 / 28 个 suite / 65 个问题，失败仅剩 Apple OCR Engine Image Tests（61 个，与基线
+  逐项相同）与 Service Translation Validation（4 个，剩余服务缺密钥）。
+- 第二阶段引用扫描：从被删文件提取 236 个类型名后全库扫描无残留；`plutil -lint` 与
+  `xcodeproj` 重新解析工程均通过。
+- 第二阶段启动冒烟测试：进程稳定、无错误日志与崩溃报告，服务列表仍为 `(Youdao, DeepSeek)`。
+- 规模：应用 Swift 文件 371 → 256，测试 Swift 文件 56 → 36，源码文件 633 → 498，
+  Debug 产物 128 MB → 118 MB。
 
 ## 完成条件
 
 - 上述静态检查全部通过且无悬空引用。
 - `docs/histories/2026-10/2026-10-12-custom-lite-edition.md` 记录结果与验证状态。
-- 构建已通过；测试结果已按基线对照归因，其中 3 个注册表断言的处置需用户授权后随第二阶段处理。
-- 归档条件：真机手工交互验证通过，且三个已下线服务的测试文件处置完成，之后移动到
-  `docs/exec-plans/completed/2026-10/`。在此之前计划保持 active。
+- 第一阶段与第二阶段均构建通过；测试结果已按基线对照归因，无由本次改动引起的失败。
+- 归档条件：真机手工交互验证通过后移动到 `docs/exec-plans/completed/2026-10/`；
+  在此之前计划保持 active，用于跟踪遗留清理项。

@@ -103,15 +103,7 @@
         NSString *value = keyValues[key];
         handled = [self enabledReadWriteKey:key];
         if (handled) {
-            MyConfiguration *config = [MyConfiguration shared];
-            BOOL isBeta = config.beta;
-            
             [[NSUserDefaults standardUserDefaults] setObject:value forKey:key];
-            
-            // If enabling beta feature, setup beta features.
-            if (!isBeta && config.beta) {
-                [MyConfiguration.shared enableBetaFeaturesIfNeeded];
-            }
         }
     }
     return handled;

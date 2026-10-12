@@ -49,17 +49,14 @@ class BuiltInAIService: BaseOpenAIService {
 
     override var defaultModels: [String] {
         [
-            // GML free models
-            ZhipuModel.glm_4_5_flash.rawValue,
-            ZhipuModel.glm_4_flash_250414.rawValue,
-
-            // Groq free models
-            GroqModel.llama3_1_8b_instant.rawValue,
+            BuiltInAIModel.glm45Flash.rawValue,
+            BuiltInAIModel.glm4Flash250414.rawValue,
+            BuiltInAIModel.llama318bInstant.rawValue,
         ]
     }
 
     override var defaultModel: String {
-        ZhipuModel.glm_4_flash_250414.rawValue
+        BuiltInAIModel.glm4Flash250414.rawValue
     }
 
     override var canFetchRemoteModels: Bool {
@@ -77,4 +74,13 @@ class BuiltInAIService: BaseOpenAIService {
     override var observeKeys: [Defaults.Key<String>] {
         [supportedModelsKey]
     }
+}
+
+// MARK: - BuiltInAIModel
+
+/// Model identifiers served by the built-in AI gateway.
+private enum BuiltInAIModel: String {
+    case glm45Flash = "glm-4.5-flash"
+    case glm4Flash250414 = "glm-4-flash-250414"
+    case llama318bInstant = "llama-3.1-8b-instant"
 }

@@ -196,10 +196,14 @@ private class ServiceValidationViewModel: ObservableObject {
 }
 
 #Preview {
-    ServiceConfigurationSecretSectionView(service: BingService(), observeKeys: [.bingCookieKey]) {
+    ServiceConfigurationSecretSectionView(
+        service: DeepSeekService(),
+        observeKeys: [DeepSeekService().apiKeyKey]
+    ) {
         SecureInputCell(
-            textFieldTitleKey: "service.configuration.bing.cookie.title",
-            key: .bingCookieKey
+            textFieldTitleKey: "service.configuration.openai.api_key.title",
+            key: DeepSeekService().apiKeyKey,
+            placeholder: DeepSeekService().apiKeyPlaceholder
         )
     }
 }

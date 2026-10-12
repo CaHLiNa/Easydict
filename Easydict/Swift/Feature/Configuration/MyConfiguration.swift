@@ -10,15 +10,6 @@ import Combine
 import Defaults
 import Foundation
 
-// MARK: - LanguageDetectOptimize
-
-@objc
-enum LanguageDetectOptimize: Int {
-    case none = 0
-    case baidu = 1
-    case google = 2
-}
-
 // MARK: - EnglishPronunciation
 
 @objc
@@ -52,7 +43,6 @@ class MyConfiguration: NSObject {
     @DefaultsWrapper(.secondLanguage) var secondLanguage: Language
     @DefaultsWrapper(.queryFromLanguage) var fromLanguage: Language
     @DefaultsWrapper(.queryToLanguage) var toLanguage: Language
-    @DefaultsWrapper(.languageDetectOptimize) var languageDetectOptimize: LanguageDetectOptimize
 
     @DefaultsWrapper(.autoShowQueryIcon) var autoSelectText: Bool
     @DefaultsWrapper(.autoShowQueryIconExcludedLanguage) var autoShowQueryIconExcludedLanguage: Language
@@ -101,7 +91,6 @@ class MyConfiguration: NSObject {
     @DefaultsWrapper(.enableMarkdownRendering) var enableMarkdownRendering: Bool
 
     // Advanced Tab
-    @DefaultsWrapper(.enableBetaFeature) private(set) var beta: Bool
     @DefaultsWrapper(.enableYoudaoOCR) var enableYoudaoOCR: Bool
     @DefaultsWrapper(.enableCompatibilityReplace) var enableCompatibilityReplace: Bool
     @DefaultsWrapper(.forceGetSelectedTextType) var forceGetSelectedTextType:
@@ -112,7 +101,6 @@ class MyConfiguration: NSObject {
     @DefaultsWrapper(.isScreenshotTipLayerHidden) var isScreenshotTipLayerHidden: Bool
     @DefaultsWrapper(.formerFixedScreenVisibleFrame) var formerFixedScreenVisibleFrame: CGRect
     @DefaultsWrapper(.formerMiniScreenVisibleFrame) var formerMiniScreenVisibleFrame: CGRect
-    @DefaultsWrapper(.enableAnkiConnect) var enableAnkiConnect: Bool
 
     @DefaultsWrapper(.preferAppleScriptAPI) var preferAppleScriptAPI: Bool
 
@@ -127,7 +115,6 @@ class MyConfiguration: NSObject {
     @ShortcutWrapper(.appleDictionaryShortcut) var appleDictShortcutString: String
     @ShortcutWrapper(.eudicShortcut) var eudicDictShortcutString: String
 
-    let updater = GlobalContext.shared.updaterController.updater
     let fontSizes: [CGFloat] = [1, 1.1, 1.2, 1.3, 1.4]
     var disabledAutoSelect: Bool = false
     var isRecordingSelectTextShortcutKey: Bool = false
@@ -136,16 +123,6 @@ class MyConfiguration: NSObject {
     var fontSizeRatio: CGFloat {
         let safeIndex = max(0, min(Int(fontSizeIndex), fontSizes.count - 1))
         return fontSizes[safeIndex]
-    }
-
-    var automaticallyChecksForUpdates: Bool {
-        get {
-            updater.automaticallyChecksForUpdates
-        }
-        set {
-            updater.automaticallyChecksForUpdates = newValue
-            logSettings(["automatically_checks_for_updates": newValue])
-        }
     }
 
     var defaultTTSServiceType: ServiceType {
@@ -160,10 +137,6 @@ class MyConfiguration: NSObject {
 
     static func destroySharedInstance() {
         shared = MyConfiguration()
-    }
-
-    func enableBetaFeaturesIfNeeded() {
-        guard beta else { return }
     }
 
     // MARK: Private
@@ -295,14 +268,6 @@ class MyConfiguration: NSObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.didSetAutoCopyFirstTranslatedText()
-            }
-            .store(in: &cancellables)
-
-        Defaults.publisher(.languageDetectOptimize, options: [])
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.didSetLanguageDetectOptimize()
             }
             .store(in: &cancellables)
 
@@ -482,10 +447,6 @@ extension MyConfiguration {
         logSettings(["click_query": clickQuery])
     }
 
-    fileprivate func didSetAutomaticallyChecksForUpdates() {
-        logSettings(["automatically_checks_for_updates": automaticallyChecksForUpdates])
-    }
-
     fileprivate func didSetHideMainWindow() {
         let windowManger = EZWindowManager.shared()
         windowManger.updatePopButtonQueryAction()
@@ -526,10 +487,6 @@ extension MyConfiguration {
 
     fileprivate func didSetAutoCopyFirstTranslatedText() {
         logSettings(["auto_copy_first_translated_text": autoCopyFirstTranslatedText])
-    }
-
-    fileprivate func didSetLanguageDetectOptimize() {
-        logSettings(["detect_optimize": languageDetectOptimize])
     }
 
     fileprivate func didSetDefaultTTSServiceType() {

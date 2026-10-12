@@ -12,8 +12,7 @@ import SystemConfiguration
 // MARK: - DetectManager
 
 /// Manager for text detection and OCR functionality.
-/// Coordinates multiple detection services (Apple, Google, Baidu, Youdao) to provide
-/// accurate language detection and optical character recognition.
+/// Uses the system language detector and OCR engine, with Youdao OCR as an optional fallback.
 @objc(EZDetectManager)
 @objcMembers
 public final class DetectManager: NSObject {
@@ -79,8 +78,7 @@ public final class DetectManager: NSObject {
         }
     }
 
-    /// Detects the language of the given text using Apple, Google, and/or Baidu services
-    /// based on the configured language detection optimization setting.
+    /// Detects the language of the given text using the system language detector.
     /// - Parameters:
     ///   - queryText: The text to detect the language of.
     ///   - completion: Callback with the updated query model and optional error.
@@ -97,57 +95,13 @@ public final class DetectManager: NSObject {
                 completion(QueryModel(), error)
                 return
             }
-            guard canApplyDetectedLanguage(for: queryText) else {
-                completion(queryModel, staleDetectionError())
-                return
-            }
 
-            var preferredLanguages = EZLanguageManager.shared().preferredLanguages
-
-            // Add English and Chinese to the preferred language list.
-            // System detect for English and Chinese is relatively accurate,
-            // so we don't need to use Google or Baidu to detect again.
-            preferredLanguages.append(contentsOf: [
-                .english,
-                .simplifiedChinese,
-                .traditionalChinese,
-            ])
-
-            let isPreferredLanguage = preferredLanguages.contains(appleDetectedLanguage)
-
-            let languageDetectOptimize = MyConfiguration.shared.languageDetectOptimize
-
-            // If the detected language is preferred or optimization is disabled, use Apple's result.
-            if isPreferredLanguage || languageDetectOptimize == .none {
-                handleDetectedLanguage(
-                    appleDetectedLanguage,
-                    queryText: queryText,
-                    error: error,
-                    completion: completion
-                )
-                return
-            }
-
-            // Otherwise, use configured optimization service (Baidu or Google).
-            if languageDetectOptimize == .baidu {
-                baiduDetect(
-                    queryText: queryText,
-                    fallbackLanguage: appleDetectedLanguage,
-                    fallbackError: error,
-                    completion: completion
-                )
-                return
-            }
-
-            if languageDetectOptimize == .google {
-                googleDetect(
-                    queryText: queryText,
-                    fallbackLanguage: appleDetectedLanguage,
-                    fallbackError: error,
-                    completion: completion
-                )
-                return
-            }
+            handleDetectedLanguage(
+                appleDetectedLanguage,
+                queryText: queryText,
+                error: error,
+                completion: completion
+            )
         }
     }
 
@@ -200,10 +154,6 @@ public final class DetectManager: NSObject {
     private var allowsDetachedDetection = false
 
     private lazy var appleService: AppleService = .shared
-
-    private lazy var googleService: GoogleService = .init()
-
-    private lazy var baiduService: BaiduService = .init()
 
     private lazy var youdaoService: YoudaoService = .init()
 
@@ -353,83 +303,6 @@ public final class DetectManager: NSObject {
                     completion(ocrResult, error)
                 }
             }
-        }
-    }
-
-    /// Detects language using Baidu's service as a fallback.
-    /// - Parameters:
-    ///   - queryText: The text to detect.
-    ///   - fallbackLanguage: The language to use if Baidu detection fails.
-    ///   - fallbackError: The error from the previous detection attempt.
-    ///   - completion: Callback to invoke with the updated query model and error.
-    private func baiduDetect(
-        queryText: String,
-        fallbackLanguage: Language,
-        fallbackError: Error?,
-        completion: @escaping (QueryModel, Error?) -> ()
-    ) {
-        baiduService.detectText(queryText) { [weak self] language, error in
-            guard let self else {
-                completion(QueryModel(), error)
-                return
-            }
-
-            let detectedLanguage = error == nil ? language : fallbackLanguage
-
-            if error == nil {
-                logInfo("Baidu detected: \(language)")
-            } else {
-                logError("Baidu detect error: \(error?.localizedDescription ?? "unknown")")
-            }
-
-            handleDetectedLanguage(
-                detectedLanguage,
-                queryText: queryText,
-                error: error ?? fallbackError,
-                completion: completion
-            )
-        }
-    }
-
-    /// Detects language using Google's service as a primary fallback,
-    /// then Baidu's service if Google fails.
-    /// - Parameters:
-    ///   - queryText: The text to detect.
-    ///   - fallbackLanguage: The language to use if all detection attempts fail.
-    ///   - fallbackError: The error from the previous detection attempt.
-    ///   - completion: Callback to invoke with the updated query model and error.
-    private func googleDetect(
-        queryText: String,
-        fallbackLanguage: Language,
-        fallbackError: Error?,
-        completion: @escaping (QueryModel, Error?) -> ()
-    ) {
-        googleService.detectText(queryText) { [weak self] language, error in
-            guard let self else {
-                completion(QueryModel(), error)
-                return
-            }
-
-            if error == nil {
-                logInfo("Google detected: \(language)")
-                handleDetectedLanguage(
-                    language,
-                    queryText: queryText,
-                    error: nil,
-                    completion: completion
-                )
-                return
-            }
-
-            logError("Google detect error: \(error?.localizedDescription ?? "unknown")")
-
-            // If Google detection failed, use Baidu detection.
-            baiduDetect(
-                queryText: queryText,
-                fallbackLanguage: fallbackLanguage,
-                fallbackError: fallbackError,
-                completion: completion
-            )
         }
     }
 }

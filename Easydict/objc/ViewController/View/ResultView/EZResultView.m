@@ -39,10 +39,6 @@
 }
 
 - (void)setup {
-    [NSNotificationCenter.defaultCenter addObserver:self
-                                          selector:@selector(copilotModelsDidChange:)
-                                              name:NSNotification.githubCopilotModelsDidChange
-                                            object:nil];
     self.wantsLayer = YES;
     self.layer.cornerRadius = EZCornerRadius_8;
     [self.layer executeLight:^(CALayer *layer) {
@@ -499,12 +495,6 @@
     self.serviceModelButton.highlightTitle = title;
     self.serviceModelButton.toolTip = [service modelSelectionTitleFor:service.model];
     [self setNeedsUpdateConstraints:YES];
-}
-
-- (void)copilotModelsDidChange:(NSNotification *)notification {
-    if ([self.service isKindOfClass:EZGitHubCopilotService.class]) {
-        [self updateServiceModelButton];
-    }
 }
 
 #pragma mark - Animation

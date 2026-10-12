@@ -66,10 +66,6 @@ extension Defaults.Keys {
         "EZConfiguration_kAutoCopyFirstTranslatedTextKey",
         default: false
     )
-    static let languageDetectOptimize = Key<LanguageDetectOptimize>(
-        "EZConfiguration_kLanguageDetectOptimizeTypeKey",
-        default: LanguageDetectOptimize.none
-    )
     static let defaultTTSServiceType = Key<TTSServiceType>(
         "EZConfiguration_kDefaultTTSServiceTypeKey",
         default: TTSServiceType.youdao
@@ -90,7 +86,6 @@ extension Defaults.Keys {
         "EZConfiguration_kShowSettingQuickLink", default: true
     )
     static let hideMenuBarIcon = Key<Bool>("EZConfiguration_kHideMenuBarIconKey", default: false)
-    static let includeBetaUpdates = Key<Bool>("EZConfiguration_kIncludeBetaUpdatesKey", default: false)
     static let fixedWindowPosition = Key<EZShowWindowPosition>(
         "EZConfiguration_kShowFixedWindowPositionKey",
         default: .right
@@ -147,7 +142,6 @@ extension Defaults.Keys {
         "EZConfiguration_kReplaceNewlineWithSpace", default: false
     )
 
-    static let enableBetaFeature = Key<Bool>("EZBetaFeatureKey", default: false)
     static var enableYoudaoOCR = Key<Bool>("enableYoudaoOCR", default: false)
     static var enableCompatibilityReplace = Key<Bool>(
         "replaceWithTranslationInCompatibilityMode",
@@ -156,20 +150,6 @@ extension Defaults.Keys {
     static var enableHTTPServer = Key<Bool>("enableHTTPServer", default: false)
     static var httpPort = Key<String>("httpPort", default: "8080")
 
-    static var enableAnkiConnect = Key<Bool>("enableAnkiConnect", default: false)
-    static var ankiConnectEndpoint = Key<String>(
-        "ankiConnectEndpoint",
-        default: "http://127.0.0.1:8765"
-    )
-    static var ankiConnectDeck = Key<String>("ankiConnectDeck", default: "Default")
-    static var ankiConnectModel = Key<String>("ankiConnectModel", default: "Basic")
-    static var ankiConnectFrontField = Key<String>("ankiConnectFrontField", default: "Front")
-    static var ankiConnectBackField = Key<String>("ankiConnectBackField", default: "Back")
-    static var ankiConnectModelFields = Key<[String]>("ankiConnectModelFields", default: [])
-    static var ankiConnectFieldMappings = Key<[AnkiFieldMapping]>(
-        "ankiConnectFieldMappings",
-        default: []
-    )
     static var enableVocabularyNotebook = Key<Bool>("enableVocabularyNotebook", default: false)
     static var vocabularyNotebookDirectory = Key<String>("vocabularyNotebookDirectory", default: "")
 
@@ -355,59 +335,8 @@ class ShortcutWrapper<T: KeyCombo> {
     }
 }
 
-private let EZDeepLTranslationAPIKey = "EZDeepLTranslationAPIKey"
+// MARK: - Shortcut keys only
 
-// Service Configuration
-extension Defaults.Keys {
-    // DeepL
-    static let deepLAuth = Key<String>(EZDeepLAuthKey, default: "")
-    static let deepLWebAppVersionCache = Key<String>(
-        "EZDeepLWebAppVersionCacheKey",
-        default: ""
-    )
-    static let deepLTranslation = Key<DeepLAPIUsagePriority>(
-        EZDeepLTranslationAPIKey,
-        default: DeepLAPIUsagePriority.webFirst
-    )
-    static let deepLTranslateEndPointKey = Key<String>(EZDeepLTranslateEndPointKey, default: "")
-
-    // Bing
-    static let bingCookieKey = Key<String>(EZBingCookieKey, default: "")
-
-    // niu
-    static let niuTransAPIKey = Key<String>(EZNiuTransAPIKey, default: "")
-
-    // Caiyun
-    static let caiyunToken = Key<String>(EZCaiyunToken, default: "")
-
-    // tencent
-    static let tencentSecretId = Key<String>(EZTencentSecretId, default: "")
-    static let tencentSecretKey = Key<String>(EZTencentSecretKey, default: "")
-
-    // Ali
-    static let aliAccessKeyId = Key<String>(EZAliAccessKeyId, default: "")
-    static let aliAccessKeySecret = Key<String>(EZAliAccessKeySecret, default: "")
-    static let aliServiceApiTypeKey = Key<ServiceAPIType>(
-        EZAliServiceApiTypeKey, default: .secretKey
-    )
-
-    // baidu
-    static let baiduAppId = Key<String>(EZBaiduAppId, default: "")
-    static let baiduSecretKey = Key<String>(EZBaiduSecretKey, default: "")
-    static let baiduServiceApiTypeKey = Key<ServiceAPIType>(
-        EZBaiduServiceApiTypeKey, default: .secretKey
-    )
-
-    // Volcano
-    static let volcanoAccessKeyID = Key<String>(EZVolcanoAccessKeyID, default: "")
-    static let volcanoSecretAccessKey = Key<String>(EZVolcanoSecretAccessKey, default: "")
-
-    // Doubao
-    static let doubaoAPIKey = Key<String>(EZDoubaoAPIKey, default: "")
-    static let doubaoModel = Key<String>(EZDoubaoModelKey, default: DoubaoService.defaultModelIdentifier)
-}
-
-/// shortcut
 extension Defaults.Keys {
     // Global
     static let selectionShortcut = Key<KeyCombo?>("EZSelectionShortcutKey_keyHolder")
@@ -424,9 +353,6 @@ extension Defaults.Keys {
     )
     static let translateAndReplaceShortcut = Key<KeyCombo?>(
         "EZTranslateAndReplaceShortcutKey_keyHolder"
-    )
-    static let polishAndReplaceShortcut = Key<KeyCombo?>(
-        "EZPolishAndReplaceShortcutKey_keyHolder"
     )
 
     static let screenshotOCRShortcut = Key<KeyCombo?>("EZScreenshotOCRShortcutKey2_keyHolder")
